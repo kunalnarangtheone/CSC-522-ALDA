@@ -21,8 +21,8 @@ read_data <- function(path = './hw1_word_frequency.csv') {
   # Note 1: DO NOT change the function arguments
   # Input: path: type: string, output: a matrix containing data from hw1_word_frequency.csv
   # Write code here to read the csv file as a matrix and return it.
-  
-  
+  df = read.csv(file = path, header=FALSE, sep=",")
+  return(df)
 }
 
 calculate_matrix <- function(data_matrix, method_name){
