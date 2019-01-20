@@ -1,9 +1,9 @@
 ###########
 # HW1
 # Mention your team details here
-#
-#
-#
+# Anders Liman (aliman)
+# Samuel Henderson (snhender)
+# Kunal Narang (knarang)
 ############
 
 # You may use the following libraries:
