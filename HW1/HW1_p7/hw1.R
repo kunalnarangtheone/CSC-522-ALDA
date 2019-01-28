@@ -21,8 +21,9 @@ read_data <- function(path = './hw1_word_frequency.csv') {
   # Note 1: DO NOT change the function arguments
   # Input: path: type: string, output: a matrix containing data from hw1_word_frequency.csv
   # Write code here to read the csv file as a matrix and return it.
-  df = read.csv(file = path, header=FALSE, sep=",")
-  return(df)
+  df = read.csv(file = path, header=TRUE, sep=",")
+  mat = as.matrix(df)
+  return(mat)
 }
 
 calculate_matrix <- function(data_matrix, method_name){
@@ -64,16 +65,38 @@ calculate_euclidean <- function(p, q) {
   # Input: p, q are vectors of size 1 x 200, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the euclidean distance between the vectors p and q
   # Write code here to calculate the euclidean distance between pair of vectors p and q
+  s <- 0
+  for (i in seq(1, length(p))) {
+    s <- s + (p[i] - q[i])^2
+  }
   
-  
-  
+  euclidean <- sqrt(s)
+  return(euclidean)
 }
 
 calculate_cosine <- function(p, q) {
   # Input: p, q are vectors of size 1 x 200, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the cosine distance between the vectors p and q
   # Write code here to calculate the cosine distance between pair of vectors p and q
+  numerator <- 0
+  denominator <- 0 
+  p.square <- 0
+  q.square <- 0
   
+  
+  for (i in seq(1, length(p))) 
+  {
+    numerator <- numerator + p[i]*q[i]
+    p.square <- p.square + p[i]*p[i]
+    q.square <- q.square + q[i]*q[i]
+  }
+  
+  mod.p <- sqrt(p.square)
+  mod.q <- sqrt(q.square)
+  denominator <- mod.p*mod.q
+  
+  cosine = numerator/denominator
+  return(cosine)
   
 }
 
@@ -81,7 +104,14 @@ calculate_manhattan <- function(p, q) {
   # Input: p, q are vectors of size 1 x 200, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the manhattan distance between the vectors p and q
   # Write code here to calculate the manhattan distance between pair of vectors p and q
+  manhattan <- 0
   
+  for (i in seq(1, length(p)))
+  {
+    manhattan <- manhattan + abs(p[i]-q[i]) 
+    
+  }
+  return(manhattan)
   
 }
 
@@ -91,7 +121,9 @@ calculate_chebyshev <- function(data_matrix){
   # sentence_length is the total length of each sentence (200 in the dataset supplied to you).
   # output: a 155 x 155 matrix of type double, containing the chebyshev distance between every pair of sentences
   # Write code here to calculate chebyshev distance given an original data matrix of size 155 x 200
-  
+  require(philentropy)
+  chebyshev <- distance(data_matrix, method = "chebyshev")
+  return(chebyshev)
   
 }
 
@@ -101,7 +133,13 @@ normalize_data <- function(data_matrix){
   # sentence_length is the total length of each sentence (200 in the dataset supplied to you).
   # output: a 155 x 200 matrix of type double, containing the normalized values in [0, 1] range per row.
   # Write code here to normalize data_matrix
+  for (i in seq(1, nrow(data_matrix))) {
+  for (j in seq(1, ncol(data_matrix))) {
+    data_matrix[i,j] <- (data_matrix[i,j] - min(i))/(max(i) - min(i))
+  }
+  }
   
+  return(data_matrix)
   
 }
 
@@ -114,6 +152,43 @@ analyze_normalization <- function(data_matrix, normalized_data_matrix){
   # Also generate the plot(s) that were requested in the question and save them to the pdf.
   # Write code here to generate the output requested as well as any plots/analyses requested.
   
+  distance_matrix = matrix(0L, nrow = nrow(data_matrix), ncol = nrow(data_matrix))
+  # the looping logic for pairwise distances is already provided for you
+  for(i in seq(1, nrow(data_matrix))){
+    for(j in seq(i, nrow(data_matrix))){
+      distance_matrix[i,j] <- do.call("calculate_euclidean", list(unlist(data_matrix[i,]), unlist(data_matrix[j,])))
+      distance_matrix[j,i] <- distance_matrix[i,j]
+    }
+  }
+  
+  distance_matrix2 = matrix(0L, nrow = nrow(normalized_data_matrix), ncol = nrow(normalized_data_matrix))
+    # the looping logic for pairwise distances is already provided for you
+    for(i in seq(1, nrow(normalized_data_matrix))){
+      for(j in seq(i, nrow(normalized_data_matrix))){
+        distance_matrix2[i,j] <- do.call("calculate_euclidean", list(unlist(normalized_data_matrix[i,]), unlist(normalized_data_matrix[j,])))
+        distance_matrix2[j,i] <- distance_matrix2[i,j]
+      }
+    }
+  
+  plot1 <- plot_distance_matrix(distance_matrix)
+  plot2 <- plot_distance_matrix(distance_matrix2)
+  
+  #add code to save plots as pdf  
+  
+  #statistic 1
+  mean1 <- mean(distance_matrix)
+  mean2 <- mean(distance_matrix2)
+  
+  #statistic 2
+  sd1 <- sd(distance_matrix)
+  sd2 <- sd(distance_matrix2)
+  
+  #statistic 3
+  #add code here
+  
+  #add plots as given in the question
+
+  return(distance_matrix2)
   
 }
 
@@ -124,3 +199,5 @@ plot_distance_matrix <- function(distance_matrix) {
     scale_x_discrete(name="Row Number") + scale_y_discrete(name="Row Number") +
     scale_fill_continuous(name="Distance")
 }
+
+
