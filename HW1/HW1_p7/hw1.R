@@ -1,9 +1,9 @@
 ###########
 # HW1
 # Mention your team details here
-#
-#
-#
+# Kunal Narang (knarang)
+# Samuel Henderson (snhender)
+# Anders Liman (aliman)
 ############
 
 # You may use the following libraries:
@@ -135,7 +135,7 @@ normalize_data <- function(data_matrix){
   # Write code here to normalize data_matrix
   for (i in seq(1, nrow(data_matrix))) {
   for (j in seq(1, ncol(data_matrix))) {
-    data_matrix[i,j] <- (data_matrix[i,j] - min(i))/(max(i) - min(i))
+    data_matrix[i,j] <- (data_matrix[i,j] - min(data_matrix[i, ]))/(max(data_matrix[i, ]) - min(data_matrix[i, ]))
   }
   }
   
@@ -152,6 +152,10 @@ analyze_normalization <- function(data_matrix, normalized_data_matrix){
   # Also generate the plot(s) that were requested in the question and save them to the pdf.
   # Write code here to generate the output requested as well as any plots/analyses requested.
   
+  avg_row_original <- c()
+  avg_row_normalized <- c()
+  
+  
   distance_matrix = matrix(0L, nrow = nrow(data_matrix), ncol = nrow(data_matrix))
   # the looping logic for pairwise distances is already provided for you
   for(i in seq(1, nrow(data_matrix))){
@@ -159,6 +163,7 @@ analyze_normalization <- function(data_matrix, normalized_data_matrix){
       distance_matrix[i,j] <- do.call("calculate_euclidean", list(unlist(data_matrix[i,]), unlist(data_matrix[j,])))
       distance_matrix[j,i] <- distance_matrix[i,j]
     }
+    avg_row_original[i] <- mean(distance_matrix[i, ])
   }
   
   distance_matrix2 = matrix(0L, nrow = nrow(normalized_data_matrix), ncol = nrow(normalized_data_matrix))
@@ -168,25 +173,47 @@ analyze_normalization <- function(data_matrix, normalized_data_matrix){
         distance_matrix2[i,j] <- do.call("calculate_euclidean", list(unlist(normalized_data_matrix[i,]), unlist(normalized_data_matrix[j,])))
         distance_matrix2[j,i] <- distance_matrix2[i,j]
       }
+      avg_row_normalized[i] <- mean(distance_matrix2[i, ])
     }
-  
+
   plot1 <- plot_distance_matrix(distance_matrix)
   plot2 <- plot_distance_matrix(distance_matrix2)
   
-  #add code to save plots as pdf  
+  df.avg_row_original <- as.data.frame(avg_row_original)
+  df.avg_row_normalized <- as.data.frame(avg_row_normalized)
   
-  #statistic 1
+  # print(df.avg_row_original)
+  # print(df.avg_row_normalized)
+
+  # plot3 <- qplot(df.avg_row_original$avg_row_original, geom="histogram") 
+  plot3 <- ggplot(df.avg_row_original, aes(x=df.avg_row_original$avg_row_original)) + geom_histogram(binwidth = 2) + xlab("Mean") + ylab("Frequency") + labs(title = "Histogram of mean of each row of the original data matrix")
+  plot4 <- ggplot(df.avg_row_normalized, aes(x=df.avg_row_normalized$avg_row_normalized)) + geom_histogram(binwidth = 0.5)+ xlab("Mean") + ylab("Frequency") + labs(title = "Histogram of mean of each row of the normalized data matrix")
+
+  
+  print("Statistic 1: Comparison of means")
   mean1 <- mean(distance_matrix)
   mean2 <- mean(distance_matrix2)
-  
-  #statistic 2
-  sd1 <- sd(distance_matrix)
-  sd2 <- sd(distance_matrix2)
-  
-  #statistic 3
-  #add code here
+  print(paste("Mean of data_matrix = ", mean1))
+  print(paste("Mean of normalized_data_matrix = ", mean2))
+  # 
+  # print("Statistic 2: Comparison of standard deviations")
+  # sd1 <- sd(distance_matrix)
+  # sd2 <- sd(distance_matrix2)
+  # print(paste("Standard deviation of data_matrix = ", sd1))
+  # print(paste("Standard deviation of normalized_data_matrix = ", sd2))
+  # 
+  # print("Statistic 3: Comparison of variances")
+  # var1 <- var(distance_matrix)
+  # var2 <- var(distance_matrix2)
+  # print(paste("Variance of data_matrix = ", var1))
+  # print(paste("Variance of normalized_data_matrix = ", var2))
   
   #add plots as given in the question
+  ggsave("Original distance matrix.pdf", plot1)
+  ggsave("Normalized distance matrix.pdf", plot2)
+  ggsave("Histogram Row Average Original Data Matrix.pdf", plot3)
+  ggsave("Histogram Row Average Normalized Data Matrix.pdf", plot4)
+
 
   return(distance_matrix2)
   
