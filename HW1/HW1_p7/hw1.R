@@ -65,12 +65,7 @@ calculate_euclidean <- function(p, q) {
   # Input: p, q are vectors of size 1 x 200, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the euclidean distance between the vectors p and q
   # Write code here to calculate the euclidean distance between pair of vectors p and q
-  s <- 0
-  for (i in seq(1, length(p))) {
-    s <- s + (p[i] - q[i])^2
-  }
-  
-  euclidean <- sqrt(s)
+  euclidean <- sqrt(sum((p - q)^2))
   return(euclidean)
 }
 
@@ -78,22 +73,11 @@ calculate_cosine <- function(p, q) {
   # Input: p, q are vectors of size 1 x 200, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the cosine distance between the vectors p and q
   # Write code here to calculate the cosine distance between pair of vectors p and q
-  numerator <- 0
-  denominator <- 0 
-  p.square <- 0
-  q.square <- 0
   
-  
-  for (i in seq(1, length(p))) 
-  {
-    numerator <- numerator + p[i]*q[i]
-    p.square <- p.square + p[i]*p[i]
-    q.square <- q.square + q[i]*q[i]
-  }
-  
-  mod.p <- sqrt(p.square)
-  mod.q <- sqrt(q.square)
-  denominator <- mod.p*mod.q
+  numerator <- sum(p*q)
+  p.length <- sqrt(sum(p^2))
+  q.length <- sqrt(sum(q^2))
+  denominator <- p.length*q.length
   
   cosine = numerator/denominator
   return(cosine)
@@ -104,13 +88,8 @@ calculate_manhattan <- function(p, q) {
   # Input: p, q are vectors of size 1 x 200, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the manhattan distance between the vectors p and q
   # Write code here to calculate the manhattan distance between pair of vectors p and q
-  manhattan <- 0
+  manhattan <- sum(abs(p - q))
   
-  for (i in seq(1, length(p)))
-  {
-    manhattan <- manhattan + abs(p[i]-q[i]) 
-    
-  }
   return(manhattan)
   
 }
@@ -121,7 +100,6 @@ calculate_chebyshev <- function(data_matrix){
   # sentence_length is the total length of each sentence (200 in the dataset supplied to you).
   # output: a 155 x 155 matrix of type double, containing the chebyshev distance between every pair of sentences
   # Write code here to calculate chebyshev distance given an original data matrix of size 155 x 200
-  require(philentropy)
   chebyshev <- distance(data_matrix, method = "chebyshev")
   return(chebyshev)
   
@@ -134,9 +112,7 @@ normalize_data <- function(data_matrix){
   # output: a 155 x 200 matrix of type double, containing the normalized values in [0, 1] range per row.
   # Write code here to normalize data_matrix
   for (i in seq(1, nrow(data_matrix))) {
-  for (j in seq(1, ncol(data_matrix))) {
-    data_matrix[i,j] <- (data_matrix[i,j] - min(data_matrix[i, ]))/(max(data_matrix[i, ]) - min(data_matrix[i, ]))
-  }
+    data_matrix[i, ] <- (data_matrix[i, ] - min(data_matrix[i, ]))/(max(data_matrix[i, ]) - min(data_matrix[i, ]))
   }
   
   return(data_matrix)
@@ -151,72 +127,17 @@ analyze_normalization <- function(data_matrix, normalized_data_matrix){
   # Output: a 155 x 155 matrix of type double containing the updated euclidean distance using the normalized_data_matrix
   # Also generate the plot(s) that were requested in the question and save them to the pdf.
   # Write code here to generate the output requested as well as any plots/analyses requested.
+  euclidean <- calculate_matrix(data_matrix, 'calculate_euclidean')
+  normalized <- calculate_matrix(normalized_data_matrix, 'calculate_euclidean')
+  plot.euclidean <- plot_distance_matrix(euclidean)
+  plot.normalized <- plot_distance_matrix(normalized)
+  hist.euclidean <- hist(euclidean)
+  hist.normalized <- hist(normalized)
   
-  avg_row_original <- c()
-  avg_row_normalized <- c()
+  ggsave("Original distance matrix.png", plot.euclidean)
+  ggsave("Normalized distance matrix.png", plot.normalized)
   
-  
-  distance_matrix = matrix(0L, nrow = nrow(data_matrix), ncol = nrow(data_matrix))
-  # the looping logic for pairwise distances is already provided for you
-  for(i in seq(1, nrow(data_matrix))){
-    for(j in seq(i, nrow(data_matrix))){
-      distance_matrix[i,j] <- do.call("calculate_euclidean", list(unlist(data_matrix[i,]), unlist(data_matrix[j,])))
-      distance_matrix[j,i] <- distance_matrix[i,j]
-    }
-    avg_row_original[i] <- mean(distance_matrix[i, ])
-  }
-  
-  distance_matrix2 = matrix(0L, nrow = nrow(normalized_data_matrix), ncol = nrow(normalized_data_matrix))
-    # the looping logic for pairwise distances is already provided for you
-    for(i in seq(1, nrow(normalized_data_matrix))){
-      for(j in seq(i, nrow(normalized_data_matrix))){
-        distance_matrix2[i,j] <- do.call("calculate_euclidean", list(unlist(normalized_data_matrix[i,]), unlist(normalized_data_matrix[j,])))
-        distance_matrix2[j,i] <- distance_matrix2[i,j]
-      }
-      avg_row_normalized[i] <- mean(distance_matrix2[i, ])
-    }
-
-  plot1 <- plot_distance_matrix(distance_matrix)
-  plot2 <- plot_distance_matrix(distance_matrix2)
-  
-  df.avg_row_original <- as.data.frame(avg_row_original)
-  df.avg_row_normalized <- as.data.frame(avg_row_normalized)
-  
-  # print(df.avg_row_original)
-  # print(df.avg_row_normalized)
-
-  # plot3 <- qplot(df.avg_row_original$avg_row_original, geom="histogram") 
-  plot3 <- ggplot(df.avg_row_original, aes(x=df.avg_row_original$avg_row_original)) + geom_histogram(binwidth = 2) + xlab("Mean") + ylab("Frequency") + labs(title = "Histogram of mean of each row of the original data matrix")
-  plot4 <- ggplot(df.avg_row_normalized, aes(x=df.avg_row_normalized$avg_row_normalized)) + geom_histogram(binwidth = 0.5)+ xlab("Mean") + ylab("Frequency") + labs(title = "Histogram of mean of each row of the normalized data matrix")
-
-  
-  print("Statistic 1: Comparison of means")
-  mean1 <- mean(distance_matrix)
-  mean2 <- mean(distance_matrix2)
-  print(paste("Mean of data_matrix = ", mean1))
-  print(paste("Mean of normalized_data_matrix = ", mean2))
-  # 
-  # print("Statistic 2: Comparison of standard deviations")
-  # sd1 <- sd(distance_matrix)
-  # sd2 <- sd(distance_matrix2)
-  # print(paste("Standard deviation of data_matrix = ", sd1))
-  # print(paste("Standard deviation of normalized_data_matrix = ", sd2))
-  # 
-  # print("Statistic 3: Comparison of variances")
-  # var1 <- var(distance_matrix)
-  # var2 <- var(distance_matrix2)
-  # print(paste("Variance of data_matrix = ", var1))
-  # print(paste("Variance of normalized_data_matrix = ", var2))
-  
-  #add plots as given in the question
-  ggsave("Original distance matrix.pdf", plot1)
-  ggsave("Normalized distance matrix.pdf", plot2)
-  ggsave("Histogram Row Average Original Data Matrix.pdf", plot3)
-  ggsave("Histogram Row Average Normalized Data Matrix.pdf", plot4)
-
-
-  return(distance_matrix2)
-  
+  return(normalized)
 }
 
 # This function visualizes a distance matrix, with color indicating distance
