@@ -134,8 +134,8 @@ analyze_normalization <- function(data_matrix, normalized_data_matrix){
   hist.euclidean <- hist(euclidean)
   hist.normalized <- hist(normalized)
   
-  ggsave("Original distance matrix.png", plot.euclidean)
-  ggsave("Normalized distance matrix.png", plot.normalized)
+  ggsave("Original distance matrix.jpeg", plot.euclidean)
+  ggsave("Normalized distance matrix.jpeg", plot.normalized)
   
   return(normalized)
 }
