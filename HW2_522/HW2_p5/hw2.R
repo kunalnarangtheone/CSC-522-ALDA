@@ -32,12 +32,8 @@ calculate_distance_matrix <- function(train_matrix, test_matrix, method_name){
   distance_matrix = matrix(0L, nrow = nrow(test_matrix), ncol = nrow(train_matrix))
   # the looping logic for pairwise distances is already provided for you
     for(i in seq(1, nrow(test_matrix))){
-      for(j in seq(i, nrow(train_matrix))){
-        #print(paste(i, j))
+      for(j in seq(1, nrow(train_matrix))){
         distance_matrix[i,j] <- do.call(method_name, list(unlist(test_matrix[i,]), unlist(train_matrix[j,])))
-        if(j < nrow(test_matrix)){
-        distance_matrix[j,i] <- distance_matrix[i,j]
-        }
       }
     }
   return(distance_matrix)
@@ -116,7 +112,7 @@ knn_classifier_confidence <- function(x_train, y_train, x_test, distance_method=
   
 }
 
-dtree <- function(x_train, y_train, x_test, n_folds){
+dtree <- function(x_train, y_train, x_test){
   set.seed(123)
   # You will build a CART decision tree, then use the tuned model to predict class values for a test dataset.
   
@@ -124,7 +120,6 @@ dtree <- function(x_train, y_train, x_test, n_folds){
   # x_train: TF-IDF matrix with dimensions: (number_training_sentences x number_features)
   # y_train: Vector with length number_training_sentences of type factor - refers to the class labels
   # x_test: TF-IDF matrix with dimensions: (number_test_sentences x number_features)
-  # n_folds: integer, refers to the number of folds for n-fold cross validation
   
   # OUTPUT:
   # A vector of predictions of length = number of sentences in y_test and of type factor.
