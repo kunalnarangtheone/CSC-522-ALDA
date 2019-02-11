@@ -43,6 +43,8 @@ calculate_euclidean <- function(p, q) {
   # Input: p, q are vectors of size 1 x 100, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the euclidean distance between the vectors p and q
   # Write code here to calculate the euclidean distance between pair of vectors p and q
+  euclidean <- sqrt(sum((p - q)^2))
+  return(euclidean)
   
 }
 
@@ -50,7 +52,13 @@ calculate_cosine <- function(p, q) {
   # Input: p, q are vectors of size 1 x 100, each representing a row (i.e., a sentence) from the original dataset.
   # output: a single value of type double, containing the cosine distance between the vectors p and q
   # Write code here to calculate the cosine distance between pair of vectors p and q
+  numerator <- sum(p*q)
+  p.length <- sqrt(sum(p^2))
+  q.length <- sqrt(sum(q^2))
+  denominator <- p.length*q.length
   
+  cosine = numerator/denominator
+  return(cosine)
 }
 
 knn_classifier <- function(x_train, y_train, x_test, distance_method, k){
@@ -87,6 +95,7 @@ knn_classifier <- function(x_train, y_train, x_test, distance_method, k){
   # You are not allowed to use predefined knn-based packages/functions. Using them will result in automatic zero.
   # Allowed packages: R base, utils
   
+  dist_mat <- calculate_distance_matrix(x_train, x_test, method_name)
   
 }
 
