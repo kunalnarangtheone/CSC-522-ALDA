@@ -2,9 +2,9 @@
 # ALDA: hw2.R 
 # Instructor: Dr. Thomas Price
 # Mention your team details here
-#
-#
-#
+# Samuel Henderson <snhender>
+# Kunal Narang <knarang>
+# Anders Liman <aliman>
 #
 ############################
 
@@ -76,7 +76,7 @@ knn_classifier <- function(x_train, y_train, x_test, distance_method, k){
   # y_train: Vector with length number_training_sentences of type factor - refers to the class labels
   # x_test: TF-IDF matrix with dimensions: (number_test_sentences x number_features)
   # k: integer, represents the 'k' to consider in the knn classifier
-  # distance_method: String, can be of type ('calcualte_euclidean' or 'calculate_cosine')
+  # distance_method: String, can be of type ('calculate_euclidean' or 'calculate_cosine')
   # OUTPUT:
   # A vector of predictions of length = number of sentences in y_test and of type factor.
   
@@ -94,9 +94,32 @@ knn_classifier <- function(x_train, y_train, x_test, distance_method, k){
   # NOTE 4:
   # You are not allowed to use predefined knn-based packages/functions. Using them will result in automatic zero.
   # Allowed packages: R base, utils
-  
-  dist_mat <- calculate_distance_matrix(x_train, x_test, method_name)
-  
+  y_test <- c()
+  dist_mat <- calculate_distance_matrix(x_train, x_test, distance_method)
+  if(distance_method == "calculate_euclidean") {
+    #Argmin
+    ordered <- t(apply(dist_mat, 1, order))
+    #knn_indices <- as.vector(t(ordered[, 1:k]))
+    knn_indices <- ordered[, 1:k]
+    predicted <- by(knn_indices, 1:nrow(knn_indices), function(row) y_train[unlist(row)])
+    print(predicted)
+    print(lapply(lapply(predicted, which.max), names))
+    for (i in seq(1, nrow(x_test))) {
+      ordered <- order(dist_mat[i, ])
+      k_neighbors <- ordered[1:k]
+      print(k_neighbors)
+      predicted = y_train[k_neighbors]
+      print(names(which.max(table(predicted))))
+    }
+  } else if(distance_method == "calculate_cosine") {
+    for (i in seq(1, nrow(x_test))) {
+      ordered <- order(dist_mat[i, ])
+      size <- nrow(x_test)
+      k_neighbors <- ordered[size - k:size]
+      predicted = y_train[k_neighbors]
+      print(names(which.max(table(predicted))))
+    }
+  }
 }
 
 
