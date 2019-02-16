@@ -94,32 +94,36 @@ knn_classifier <- function(x_train, y_train, x_test, distance_method, k){
   # NOTE 4:
   # You are not allowed to use predefined knn-based packages/functions. Using them will result in automatic zero.
   # Allowed packages: R base, utils
-  y_test <- c()
+  
   dist_mat <- calculate_distance_matrix(x_train, x_test, distance_method)
-  if(distance_method == "calculate_euclidean") {
-    #Argmin
-    ordered <- t(apply(dist_mat, 1, order))
-    #knn_indices <- as.vector(t(ordered[, 1:k]))
-    knn_indices <- ordered[, 1:k]
-    predicted <- by(knn_indices, 1:nrow(knn_indices), function(row) y_train[unlist(row)])
-    print(predicted)
-    print(lapply(lapply(predicted, which.max), names))
-    for (i in seq(1, nrow(x_test))) {
-      ordered <- order(dist_mat[i, ])
-      k_neighbors <- ordered[1:k]
-      print(k_neighbors)
-      predicted = y_train[k_neighbors]
-      print(names(which.max(table(predicted))))
-    }
-  } else if(distance_method == "calculate_cosine") {
-    for (i in seq(1, nrow(x_test))) {
-      ordered <- order(dist_mat[i, ])
-      size <- nrow(x_test)
-      k_neighbors <- ordered[size - k:size]
-      predicted = y_train[k_neighbors]
-      print(names(which.max(table(predicted))))
-    }
+  
+  # Order the distance matrix so we can get the smallest/largest distances/similarities
+  # The order function returns the indices rather than the values, so we can use them on y_train
+  # Order by largest to smallest if the distance method is cosine similarity 
+  # Transpose for ease of use
+  ordered <- t(apply(dist_mat, 1, order, decreasing = (distance_method == "calculate_cosine")))
+  
+  # Subset the matrix to have k indices
+  knn_indices <- ordered[, 1:k]
+  
+  # Turn the indices matrix into a list of vectors
+  knn_indices <- split(knn_indices, seq(nrow(knn_indices)))
+  
+  #Helper function to be used by mapply
+  labels_fun <- function(knn_indices) {
+    labels <- y_train[knn_indices]
+    # Apply names(which.max(table())) to each row of predictions
+    # This returns the name of the factor with the max counts
+    return(names(which.max(table(labels))))
   }
+  
+  # Apply the list of indices over the y_train class label
+  # Essentially applying y_train[c(1, 2 , ..., k)] x times, where x is the number of rows in x_test
+  y_test <- mapply(labels_fun, knn_indices)
+
+  # Turn y_test labels into factor
+  y_test <- as.factor(unlist(y_test))
+  return(y_test)
 }
 
 
@@ -141,7 +145,47 @@ knn_classifier_confidence <- function(x_train, y_train, x_test, distance_method=
   # Read the NOTES from comments under knn_classifier.
   # Allowed packages: R base, utils
   
+  dist_mat <- calculate_distance_matrix(x_train, x_test, distance_method)
   
+  # Order the distance matrix so we can get the smallest/largest distances/similarities
+  # The order function returns the indices rather than the values, so we can use them on y_train
+  # Order by largest to smallest if the distance method is cosine similarity 
+  # Transpose for ease of use
+  ordered <- t(apply(dist_mat, 1, order, decreasing = (distance_method == "calculate_cosine")))
+  
+  # Subset the matrix to have k indices
+  knn_indices <- ordered[, 1:k]
+  
+  # Turn the indices matrix into a list of vectors
+  knn_indices.list <- split(knn_indices, seq(nrow(knn_indices)))
+  
+  # Create matrix of similarity for weighting
+  sorted <- t(apply(dist_mat, 1, sort, decreasing = (distance_method == "calculate_cosine")))
+  knn_similarity <- sorted[, 1:k]
+  
+  # Turn the similarity matrix into a list of vectors
+  knn_similarity.list <- split(knn_similarity, seq(nrow(knn_similarity)))
+
+  # Helper function
+  weighted_label <- function(neighbors, knn_indices) {
+    labels <- y_train[knn_indices]
+    total_similarity <- sum(neighbors)
+    # Split KNNs into groups from predictions
+    s <- split(neighbors, labels)
+    
+    # Divide by total similarity and sum
+    confidence <- unlist(lapply(lapply(s, function(x) x / total_similarity), sum))
+    
+    # Return class label (max group label)
+    return(names(which.max(confidence)))
+  }
+  
+  # Apply helper function using every row of the similarity list and predictions list
+  y_test <- mapply(weighted_label, knn_similarity.list, knn_indices.list)
+  
+  # Turn y_test labels into factor
+  y_test <- as.factor(unlist(y_test))
+  return(y_test)
 }
 
 dtree <- function(x_train, y_train, x_test){
@@ -162,8 +206,10 @@ dtree <- function(x_train, y_train, x_test){
   
   # HINT2: I've given you attributes and class labels as separate variables. Do you need to combine them 
   # into a data frame for rpart?
-  
-  
+  df <- data.frame(x_train, y_train)
+  fit <- rpart(formula = y_train ~ ., data = df, method="class")
+  y_test <- predict(fit, x_test, type="class")
+  return(y_test)
 }
 
 
@@ -184,8 +230,11 @@ dtree_cv <- function(x_train, y_train, x_test, n_folds){
   # Allowed packages: rpart, caret, R Base, utils
   
   # HINT1: Make sure to read the documentation for the caret package. Check out the 'train' and 'trainControl' functions.
-  
-  
+  df <- data.frame(x_train, y_train)
+  fitControl <- trainControl(method="repeatedcv", number=n_folds, repeats=n_folds)
+  fit <- train(y_train ~ ., data=df, method="rpart1SE", trControl=fitControl)
+  y_test <- predict(fit, x_test, type="raw")
+  return(y_test)
 }
 
 
@@ -203,7 +252,11 @@ calculate_accuracy <- function(y_pred, y_true){
   # overall class accuracy = accuracy of all the classes
   
   # confusion matrix should have Prediction to the left, and Reference on the top.
+  Prediction <- y_pred
+  Reference <- y_true
+  confusion_matrix <- table(Prediction, Reference)
+  accuracy <- sum(y_pred == y_true) / length(y_pred)
   
-  
+  return(list(confusion_matrix, accuracy))
 }
 
