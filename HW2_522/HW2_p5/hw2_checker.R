@@ -37,7 +37,7 @@ cosine_classification <- knn_classifier(X_train, y_train, X_test, 'calculate_cos
 knn_conf_classification <- knn_classifier_confidence(X_train, y_train, X_test,  'calculate_cosine', 5)
 
 # calculate classification outcomes using Decision Tree using rpart and gini index with default hyperparameters
-dt_classification <- dtree(X_train, y_train, X_test, 5)
+dt_classification <- dtree(X_train, y_train, X_test)
 
 # calculate classification outcomes using a tuned Decision Tree
 dt_cv_classification <- dtree_cv(X_train, y_train, X_test, 5)
