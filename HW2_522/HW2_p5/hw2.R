@@ -254,10 +254,9 @@ calculate_accuracy <- function(y_pred, y_true){
   # confusion matrix should have Prediction to the left, and Reference on the top.
   Prediction <- y_pred
   Reference <- y_true
-  confusion_matrix <- confusionMatrix(Prediction, Reference)
-  confusion_matrix.table <- as.matrix(confusion_matrix)
+  confusion_matrix <- table(Prediction, Reference)
   accuracy <- sum(y_pred == y_true) / length(y_pred)
   
-  return(list(confusion_matrix.table, accuracy))
+  return(list(confusion_matrix, accuracy))
 }
 
