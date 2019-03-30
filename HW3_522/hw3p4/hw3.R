@@ -31,6 +31,7 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
   
   # Function hints: Read the documentation for the functions glmnet, cv.glmnet, predict
   # Ridge and Lasso regression hints: Lambda is the hyperparameter
+  
   if(regression_type == 'linear'){ 
     # ~ 2-3 lines of code
     # write code for building a linear regression model using x_train, y_train
@@ -39,9 +40,15 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
     # Hint: Think of what the lambda value means for linear regression without regularization.
     
     
+    # use lambda = 0 for a linear regression 
+    linear_model <- glmnet(x = x_train, y = y_train, lambda = 0)
+    cv_linear_model <- cv.glmnet(x = x_train, y = y_train)
     
     # predict using the model
+    y_predicted <- predict(linear_model, newx = x_test, s = "lambda.min")
     
+    #return the list of the model and its predictions
+    return(list(linear_model, y_predicted))
     
     
   }else if(regression_type == 'ridge'){
@@ -51,11 +58,15 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
     # the hyperparameter you are tuning here is lambda
     
     
+    # (use alpha = 0 as penalty) for ridge regression
+    ridge_regression_model <- glmnet(x = x_train, y = y_train, alpha = 0)
+    cv_ridge_regression_model <- cv.glmnet(x = x_train, y = y_train, alpha = 0, nfolds = 10)
     
     # predict on x_test using the model that gives least MSE
+    y_predicted <- predict(cv_ridge_regression_model, newx = x_test, s = "lambda.min")
     
-    
-    
+    #return the list of the model and its predictions
+    return(list(ridge_regression_model, y_predicted))
     
   }else{
     # ~ 2-3 lines of code
@@ -64,9 +75,15 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
     # the hyperparameter you are tuning here is lambda
     
     
+    # lasso regression (use alpha = 1 as penalty)
+    lasso_regression_model <- glmnet(x = x_train, y = y_train, alpha = 1)
+    cv_lasso_regression_model <- cv.glmnet(x = x_train, y = y_train, alpha = 1, nfolds = 10)
     
     # predict on x_test using the model that gives least MSE
+    y_predicted <- predict(cv_lasso_regression_model, newx = x_test, s = "lambda.min")
     
+    #return the list of the model and its predictions
+    return(list(lasso_regression_model, y_predicted))
     
   }
   
@@ -108,7 +125,20 @@ regression_compare_rmse <- function(y_test, linear_regression_prediction, ridge_
   # Allowed packages: R-base
   # You are given the implementation for calculate_rmse (see above) 
   
+  linear_regression_rmse <- calculate_rmse(y_true = y_test, y_pred = linear_regression_prediction)
+  ridge_regression_rmse <- calculate_rmse(y_true = y_test, y_pred = ridge_prediction)
+  lasso_regression_rmse <- calculate_rmse(y_true = y_test, y_pred = lasso_prediction)
+  rmse_values <- c(linear_regression_rmse, ridge_regression_rmse, lasso_regression_rmse)
+  best_rmse <- min(rmse_values)
   
+  if(best_rmse == linear_regression_rmse)
+    return(list("linear", best_rmse, rmse_values))
+  
+  else if(best_rmse == ridge_regression_rmse)
+    return(list("ridge", best_rmse, rmse_values))
+  
+  else(best_rmse == lasso_regression_rmse)
+    return(list("lasso", best_rmse, rmse_values))
   
 }
 
