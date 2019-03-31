@@ -179,27 +179,23 @@ alda_svm <- function(x_train, x_test, y_train, kernel_name){
   
   # Hints: See if you can use the 'tune' function in e1071 for cross validation
    if(kernel_name == "radial"){
-    # ~1-2 lines 
-  
-     
-     
+    tuned <- tune.svm(x_train, y_train, cost = c(0.01, 0.1, 1, 10), gamma = c(0.05, 0.5, 1, 2), kernel = kernel_name)
+    
   }else if(kernel_name == 'polynomial'){
-    #~1-2 lines
-    
-    
+    tuned <- tune.svm(x_train, y_train, cost = c(0.01, 0.1, 1, 10), gamma = c(0.05, 0.5, 1, 2), degree = c(1,2,3), kernel = kernel_name)
     
   }else if(kernel_name == 'sigmoid'){
-    #~1-2 lines
-    
-    
+    tuned <- tune.svm(x_train, y_train, cost = c(0.01, 0.1, 1, 10), gamma = c(0.05, 0.5, 1, 2), kernel = kernel_name)
     
   }else{ # default linear kernel
     #~1-2 lines
-    
-    
+    tuned <- tune.svm(x_train, y_train, cost = c(0.01, 0.1, 1, 10), kernel = kernel_name)
     
   }
+  m <- tuned$best.model
+  predictions <- predict(m, x_test)
   
+  return(list(m, predictions))
 }
 
 
@@ -231,7 +227,15 @@ classification_compare_accuracy <- function(y_test, linear_kernel_prediction, ra
     # third value, a vector with the overall accuracies of all methods in this order: c(linear-svm's accuracy, radial-svm's accuracy, poly-svm's accuracy, sigmoid-svm's accuracy)
   # Allowed packages: R-base
   # Note that I asked you to implement accuracy calculation - do not use a library for this
+  linear_svm_accuracy <- sum(abs(y_test == linear_kernel_prediction) < 1e-6) / length(y_test)
+  radial_svm_accuracy <- sum(abs(y_test == radial_kernel_prediction) < 1e-6) / length(y_test)
+  poly_svm_accuracy <- sum(abs(y_test == polynomial_kernel_prediction) < 1e-6) / length(y_test)
+  sigmoid_svm_accuracy <- sum(abs(y_test == sigmoid_kernel_prediction) < 1e-6) / length(y_test)
   
+  accuracies <- c(linear_svm_accuracy, radial_svm_accuracy, poly_svm_accuracy, sigmoid_svm_accuracy)
+  name <- c("svm-linear", "svm-radial", "svm-poly", "svm-sigmoid")[which.max(accuracies)]
+  best <- max(accuracies)
   
+  return(list(name, best, accuracies))
 }
 
