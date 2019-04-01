@@ -42,8 +42,7 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
     
     # use lambda = 0 for a linear regression 
     linear_model <- glmnet(x = x_train, y = y_train, lambda = 0)
-    cv_linear_model <- cv.glmnet(x = x_train, y = y_train)
-    
+
     # predict using the model
     y_predicted <- predict(linear_model, newx = x_test, s = "lambda.min")
     
@@ -59,14 +58,13 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
     
     
     # (use alpha = 0 as penalty) for ridge regression
-    ridge_regression_model <- glmnet(x = x_train, y = y_train, alpha = 0)
-    cv_ridge_regression_model <- cv.glmnet(x = x_train, y = y_train, alpha = 0, nfolds = 10)
+    cv_ridge_regression_model <- cv.glmnet(x = x_train, y = y_train, alpha = 0, nfolds = 10, type.measure = "mse")
     
     # predict on x_test using the model that gives least MSE
     y_predicted <- predict(cv_ridge_regression_model, newx = x_test, s = "lambda.min")
     
     #return the list of the model and its predictions
-    return(list(ridge_regression_model, y_predicted))
+    return(list(cv_ridge_regression_model, y_predicted))
     
   }else{
     # ~ 2-3 lines of code
@@ -76,14 +74,13 @@ alda_regression <- function(x_train, x_test, y_train, regression_type){
     
     
     # lasso regression (use alpha = 1 as penalty)
-    lasso_regression_model <- glmnet(x = x_train, y = y_train, alpha = 1)
-    cv_lasso_regression_model <- cv.glmnet(x = x_train, y = y_train, alpha = 1, nfolds = 10)
+    cv_lasso_regression_model <- cv.glmnet(x = x_train, y = y_train, alpha = 1, nfolds = 10, type.measure = "mse")
     
     # predict on x_test using the model that gives least MSE
     y_predicted <- predict(cv_lasso_regression_model, newx = x_test, s = "lambda.min")
     
     #return the list of the model and its predictions
-    return(list(lasso_regression_model, y_predicted))
+    return(list(cv_lasso_regression_model, y_predicted))
     
   }
   
@@ -188,13 +185,11 @@ alda_svm <- function(x_train, x_test, y_train, kernel_name){
     tuned <- tune.svm(x_train, y_train, cost = c(0.01, 0.1, 1, 10), gamma = c(0.05, 0.5, 1, 2), kernel = kernel_name)
     
   }else{ # default linear kernel
-    #~1-2 lines
     tuned <- tune.svm(x_train, y_train, cost = c(0.01, 0.1, 1, 10), kernel = kernel_name)
-    
+  
   }
   m <- tuned$best.model
   predictions <- predict(m, x_test)
-  
   return(list(m, predictions))
 }
 
@@ -227,10 +222,10 @@ classification_compare_accuracy <- function(y_test, linear_kernel_prediction, ra
     # third value, a vector with the overall accuracies of all methods in this order: c(linear-svm's accuracy, radial-svm's accuracy, poly-svm's accuracy, sigmoid-svm's accuracy)
   # Allowed packages: R-base
   # Note that I asked you to implement accuracy calculation - do not use a library for this
-  linear_svm_accuracy <- sum(abs(y_test == linear_kernel_prediction) < 1e-6) / length(y_test)
-  radial_svm_accuracy <- sum(abs(y_test == radial_kernel_prediction) < 1e-6) / length(y_test)
-  poly_svm_accuracy <- sum(abs(y_test == polynomial_kernel_prediction) < 1e-6) / length(y_test)
-  sigmoid_svm_accuracy <- sum(abs(y_test == sigmoid_kernel_prediction) < 1e-6) / length(y_test)
+  linear_svm_accuracy <- (sum(y_test == linear_kernel_prediction) / length(y_test)) * 100
+  radial_svm_accuracy <- (sum(y_test == radial_kernel_prediction) / length(y_test)) * 100
+  poly_svm_accuracy <- (sum(y_test == polynomial_kernel_prediction) / length(y_test)) * 100
+  sigmoid_svm_accuracy <- (sum(y_test == sigmoid_kernel_prediction) / length(y_test)) * 100
   
   accuracies <- c(linear_svm_accuracy, radial_svm_accuracy, poly_svm_accuracy, sigmoid_svm_accuracy)
   name <- c("svm-linear", "svm-radial", "svm-poly", "svm-sigmoid")[which.max(accuracies)]

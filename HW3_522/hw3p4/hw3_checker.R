@@ -66,6 +66,12 @@ clf_data <- load_data(data_folder='./data/', learning_type='classification')
 clf_train_df <- clf_data[[1]]
 clf_test_df <- clf_data[[2]]
 
+# load sample data 
+reg_test_df <- read.csv('./data/regression_sample_test.csv', header=T)
+
+clf_test_df <- read.csv('./data/classification_sample_test.csv', header=T)
+clf_test_df$class <- as.factor(clf_test_df$class)
+
 ############################################################################################################ 
 # Learning and parameter tuning 
 
