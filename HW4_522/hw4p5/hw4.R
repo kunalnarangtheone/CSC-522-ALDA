@@ -128,9 +128,12 @@ alda_nn <- function(x_train, x_test, y_train, parameter_grid){
   
   # allowed packages: R-base, nnet, caret, dplyr
   
+  train_parameters <- trainControl(method = "cv", number = 10)
+  trained_model <- train(x_train, as.factor(y_train), method = "nnet", metric = "Accuracy",tuneGrid = parameter_grid, trControl = train_parameters)
+  predicted_model <- predict(trained_model, x_test, type = "raw")
+  factor_predicted_model <- as.factor(predicted_model)
   
-  
-  
+  return(list(trained_model, factor_predicted_model))
   
   
 }
