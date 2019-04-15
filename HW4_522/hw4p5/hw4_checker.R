@@ -93,7 +93,7 @@ complete_link_sse <- alda_calculate_sse(data_df = clustering_data, cluster_assig
 
 # Setup for analysis section in clustering
 # generate the elbow plot for kmeans for c(1, 2, 3, 4, 5, 6, 7)
-alda_kmeans_elbow_plot(data_df = clustering_data, k_values = c(1, 2,3,4,5,6,7))
+alda_kmeans_elbow_plot(data_df = clustering_data, k_values = c(1,2,3,4,5,6,7))
 
 # Code's already been written, no need to make any changes here
 # First, lets evaluate the SSE values by printing them

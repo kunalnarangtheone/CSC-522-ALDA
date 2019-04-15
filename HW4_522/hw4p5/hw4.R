@@ -17,11 +17,20 @@ alda_calculate_sse <- function(data_df, cluster_assignments){
     # cluster_assignments: cluster assignments that have been generated using any of the clustering algorithms
   # Output:
     # A single value of type double, which is the total SSE of the clusters.
-
+  means <- vector("list", length(unique(cluster_assignments)))
+  names(means) <- unique(cluster_assignments)
+  clusters <- split(data_df, cluster_assignments)
+  for(i in seq_along(unique(cluster_assignments))) {
+    means[[i]] <- colMeans(clusters[[i]])
+  }
   
+  sq_diff <- vector("numeric", length(unique(cluster_assignments)))
+  names(sq_diff) <- unique(cluster_assignments)
+  for(i in seq_along(cluster_assignments)) {
+    sq_diff[[cluster_assignments[i]]] <- sq_diff[[cluster_assignments[i]]] + norm(data_df[i,] - means[[cluster_assignments[i]]], type = "2")^2
+  }
+  return(Reduce("+", sq_diff))
 }
-
-
 
 alda_kmeans_elbow_plot <- function(data_df, k_values){
   # ~ 8-10 lines
@@ -36,8 +45,9 @@ alda_kmeans_elbow_plot <- function(data_df, k_values){
   
   # Output:
     # Nothing, simply generate a plot and save it to disk as "GroupNumber_elbow.png"
- 
-  
+  results <- mapply(alda_cluster, n_clusters = k_values, MoreArgs = list(data_df = data_df, clustering_type = "kmeans"), SIMPLIFY=FALSE)
+  sse <- mapply(alda_calculate_sse, cluster_assignments = results, MoreArgs = list(data_df = data_df))
+  plot(k_values, sse, type='b', main = "Kmeans elbow plot", xlab = 'K Values', ylab = 'SSE')
 }
 
 
@@ -57,10 +67,9 @@ alda_cluster <- function(data_df, n_clusters, clustering_type){
     # allowed packages for kmeans: R-base, stats, dplyr
     # set the max number of iterations to 100, number of random restarts = 1 (let's not break the TA's computer! )
     # choose "Lloyd" as the algorithm 
-    
-    
-    
-    
+    fit <- kmeans(data_df, n_clusters, iter.max = 100, nstart = 1, algorithm = "Lloyd")
+    print(fit)
+    cluster <- fit$cluster
   }else if(clustering_type == "single-link"){
     # ~ 3-5 lines
     # Allowed packages for single-link: R-base, stats, dplyr
@@ -70,10 +79,9 @@ alda_cluster <- function(data_df, n_clusters, clustering_type){
     # Note 2: Does hclust return the clusters assignments directly, or does it return a dendrogram? 
             # Hint 2: Look up the stats package for a method to cut the tree at n_clusters
             # Visualize the dendrogram - paste this dendrogram in your PDF 
-    
-    
-    
-    
+    d <- dist(data_df, method = "euclidean")
+    tree <- hclust(d, method = "single")
+    cluster <- cutree(tree, k = n_clusters)
   }else{ #complete link clustering is default
     # ~ 3-5 lines
     # Allowed packages for single-link: R-base, stats, dplyr
@@ -83,11 +91,11 @@ alda_cluster <- function(data_df, n_clusters, clustering_type){
     # Note 2: Does hclust return the clusters assignments directly, or does it return a dendrogram? 
     # Hint 2: Look up the stats package for a method to cut the dendrogram at n_clusters
     # Visualize the dendrogram - paste this dendrogram in your PDF 
-    
-    
-    
-      
+    d <- dist(data_df, method = "euclidean")
+    tree <- hclust(d, method = "complete")
+    cluster <- cutree(tree, k = n_clusters)
   }
+  return(cluster)
 }
 
 
