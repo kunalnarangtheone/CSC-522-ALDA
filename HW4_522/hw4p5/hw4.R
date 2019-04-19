@@ -2,10 +2,9 @@
 # HW4 
 # Instructor: Dr. Thomas Price
 # Specify your team details here
-# 
-#
-#
-#
+# Kunal Narang <knarang>
+# Samuel Henderson <snhender>
+# Anders Liman <aliman>
 #########
 library(dplyr)
 library(ggplot2)
